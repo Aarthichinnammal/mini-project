@@ -1,12 +1,11 @@
 // src/App.js
 import React, { useEffect, useState, useRef } from "react";
+import "./App.css";
 import "./index.css";
-
-const API_URL = "https://example.com/api/projects"; // optional - replace with your real API
+const API_URL = "https://example.com/api/projects"; 
 const STORAGE_KEY = "freelancer_bids_v1";
 const BC_CHANNEL = "freelancer_bids_channel";
 
-/* --------- Mock projects (fallback if fetch fails) --------- */
 const mockProjects = [
   {
     id: "p1",
@@ -46,7 +45,6 @@ const mockProjects = [
   },
 ];
 
-/* --------- Helpers for localStorage persistence --------- */
 function readStoredBids() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -68,7 +66,6 @@ function formatCurrency(n) {
   return "₹" + Number(n).toLocaleString();
 }
 
-/* --------- Countdown component --------- */
 function Countdown({ endTime, onExpire }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -96,7 +93,6 @@ function Countdown({ endTime, onExpire }) {
   );
 }
 
-/* --------- Modal for placing bids --------- */
 function BidModal({ project, onClose, onPlaceBid }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -138,7 +134,6 @@ function BidModal({ project, onClose, onPlaceBid }) {
   );
 }
 
-/* --------- Main app --------- */
 export default function App() {
   const [projects, setProjects] = useState([]);
   const [filter, setFilter] = useState("All");
@@ -158,15 +153,14 @@ export default function App() {
         setProjects(data.map((p) => ({ ...p })));
       })
       .catch(() => {
-        // fallback to local mock data
+       
         setProjects(mockProjects.map((p) => ({ ...p })));
       });
     return () => (mounted = false);
   }, []);
 
-  // load stored bids and attach to projects
   useEffect(() => {
-    const stored = readStoredBids(); // { projectId: [bids...] }
+    const stored = readStoredBids(); 
     setProjects((prev) => prev.map((p) => {
       const bids = stored[p.id] || [];
       const highest = bids.reduce((acc, b) => (!acc || b.amount > acc.amount ? b : acc), null);
@@ -174,7 +168,7 @@ export default function App() {
     }));
   }, [/* run after initial projects set */]);
 
-  // BroadcastChannel + storage fallback + custom event for same-tab updates
+  
   useEffect(() => {
     if ("BroadcastChannel" in window) {
       try {
@@ -240,9 +234,9 @@ export default function App() {
     map[projectId].push(bid);
     writeStoredBids(map);
 
-    // notify same tab listeners
+   
     window.dispatchEvent(new CustomEvent("freelancerBid", { detail: { projectId, bid } }));
-    // Broadcast to other tabs
+   
     if (bcRef.current) {
       try {
         bcRef.current.postMessage({ type: "new-bid", projectId, bid });
@@ -251,7 +245,6 @@ export default function App() {
       }
     }
 
-    // update local state immediately
     applyIncomingBid(projectId, bid, true);
   }
 
